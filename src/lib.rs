@@ -27,11 +27,11 @@
 //! This is a simple function which greets the name provided as input.
 //!
 //! ```rust,ignore
-//! use fdk::{Function, FunctionError, RuntimeContext};
+//! use fdk::{Function, FunctionError, RuntimeContext, Result};
 //! use tokio; // Tokio for handling future.
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), FunctionError> {
+//! async fn main() -> Result<()> {
 //!     if let Err(e) = Function::run(|_: &mut RuntimeContext, i: String| {
 //!         Ok(format!(
 //!             "Hello {}!",
@@ -76,4 +76,4 @@ mod utils;
 pub use coercions::{InputCoercible, OutputCoercible};
 pub use context::RuntimeContext;
 pub use errors::FunctionError;
-pub use function::Function;
+pub use function::{Function, Result};

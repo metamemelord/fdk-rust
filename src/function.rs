@@ -9,6 +9,9 @@ use crate::errors::FunctionError;
 use crate::socket::UDS;
 use crate::utils::success_or_recoverable_error;
 
+
+pub type Result<OutputCoercible> = core::result::Result<OutputCoercible, FunctionError>;
+
 lazy_static! {
     static ref POOL: Pool<Vec<u8>> = Pool::new(1024, || Vec::with_capacity(4096));
 }
@@ -30,11 +33,11 @@ impl Function {
     ///   eprintln!("{}", e);
     /// }
     /// ```
-    pub async fn run<T, S, F>(function: F) -> Result<(), FunctionError>
+    pub async fn run<T, S, F>(function: F) -> Result<()>
     where
         T: InputCoercible + 'static,
         S: OutputCoercible + 'static,
-        F: Fn(&mut RuntimeContext, T) -> Result<S, FunctionError>
+        F: Fn(&mut RuntimeContext, T) -> Result<S>
             + Send
             + Sync
             + 'static,
@@ -42,11 +45,11 @@ impl Function {
         Self::run_inner(std::sync::Arc::new(function)).await
     }
 
-    async fn run_inner<T, S, F>(function: std::sync::Arc<F>) -> Result<(), FunctionError>
+    async fn run_inner<T, S, F>(function: std::sync::Arc<F>) -> Result<()>
     where
         T: InputCoercible + 'static,
         S: OutputCoercible + 'static,
-        F: Fn(&mut RuntimeContext, T) -> Result<S, FunctionError>
+        F: Fn(&mut RuntimeContext, T) -> Result<S>
             + Send
             + Sync
             + 'static,
@@ -158,7 +161,7 @@ impl Function {
 fn encode_body<S: OutputCoercible>(
     content_type: &ContentType,
     s: S,
-) -> Result<Vec<u8>, FunctionError> {
+) -> Result<Vec<u8>> {
     match content_type {
         ContentType::JSON => S::try_encode_json(s),
         ContentType::YAML => S::try_encode_yaml(s),
@@ -171,7 +174,7 @@ fn encode_body<S: OutputCoercible>(
 fn decode_body<T: InputCoercible>(
     content_type: ContentType,
     buffer: &object_pool::Reusable<Vec<u8>>,
-) -> Result<T, FunctionError> {
+) -> Result<T> {
     match content_type {
         ContentType::JSON => T::try_decode_json(buffer.to_vec()),
         ContentType::YAML => T::try_decode_yaml(buffer.to_vec()),
